@@ -106,6 +106,12 @@
         }
 
         async function handleImage(input) {
+            const translateLabel = {
+                "Juice": "عصير",
+                "Soft Drink": "مشروب غازي",
+                "Hot Drink": "مشروب ساخن"
+            };
+
             const file = input.files[0];
             if (!file) return;
 
