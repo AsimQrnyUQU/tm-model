@@ -123,7 +123,9 @@
                 labelContainer.innerHTML = "";
 
                 prediction.forEach(p => {
-                    const text = `${p.className}: ${(p.probability * 100).toFixed(2)}%`;
+                    const arabicName = translateLabel[p.className] || p.className;
+                    const text = `${arabicName}: ${(p.probability * 100).toFixed(2)}%`;
+
                     const div = document.createElement("div");
                     div.textContent = text;
                     div.className = "result-box";
