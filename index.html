@@ -1,55 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Teachable Machine Model</title>
+    <meta charset="UTF-8">
+    <title>Image Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #upload-container {
+            margin: 20px 0;
+        }
+
+        #preview-img {
+            width: 200px;
+            height: auto;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            display: none;
+        }
+
+        #label-container {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <div>Teachable Machine Image Model</div>
-    <button type="button" onclick="init()">Start</button>
-    <div id="webcam-container"></div>
-    <div id="label-container"></div>
+
+    <h1>🐾 Teachable Machine Image Classifier</h1>
+    <p>Upload an image to classify it using your trained model</p>
+
+    <div id="upload-container">
+        <input type="file" id="imageUpload" accept="image/*" onchange="handleImage(this)">
+        <img id="preview-img" />
+    </div>
+
+    <div id="label-container">Prediction will appear here</div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-    <script type="text/javascript">
-        const URL = "https://teachablemachine.withgoogle.com/models/_mipC-4rZ/"; // 🔁 استبدله برابطك
+    <script>
+        const URL = "https://teachablemachine.withgoogle.com/models/_mipC-4rZ/"; // استبدل abc123 برابط النموذج الحقيقي
 
-        let model, webcam, labelContainer, maxPredictions;
+        let model, labelContainer, maxPredictions;
 
-        async function init() {
+        async function loadModel() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
 
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
 
-            const flip = true;
-            webcam = new tmImage.Webcam(200, 200, flip);
-            await webcam.setup();
-            await webcam.play();
-            window.requestAnimationFrame(loop);
-
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
             labelContainer = document.getElementById("label-container");
-            for (let i = 0; i < maxPredictions; i++) {
-                labelContainer.appendChild(document.createElement("div"));
-            }
+            labelContainer.innerHTML = "Model loaded ✅";
         }
 
-        async function loop() {
-            webcam.update();
-            await predict();
-            window.requestAnimationFrame(loop);
+        async function handleImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const img = document.getElementById("preview-img");
+            img.src = URL.createObjectURL(file);
+            img.onload = async () => {
+                img.style.display = "block";
+                const prediction = await model.predict(img);
+                labelContainer.innerHTML = "";
+                prediction.forEach(p => {
+                    const text = `${p.className}: ${(p.probability * 100).toFixed(2)}%`;
+                    const div = document.createElement("div");
+                    div.textContent = text;
+                    labelContainer.appendChild(div);
+                });
+            };
         }
 
-        async function predict() {
-            const prediction = await model.predict(webcam.canvas);
-            for (let i = 0; i < maxPredictions; i++) {
-                const classPrediction =
-                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-                labelContainer.childNodes[i].innerHTML = classPrediction;
-            }
-        }
+        // Load model on page load
+        window.addEventListener('load', loadModel);
     </script>
+
 </body>
 </html>
